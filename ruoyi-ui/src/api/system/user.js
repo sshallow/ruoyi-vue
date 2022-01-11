@@ -10,6 +10,15 @@ export function listUser(query) {
   })
 }
 
+// 查询因子大类列表
+export function listJgg(query) {
+  return request({
+    url: '/system/user/jgg',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询用户详细
 export function getUser(userId) {
   return request({
