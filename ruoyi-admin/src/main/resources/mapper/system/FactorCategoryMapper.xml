@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FactorCategoryMapper">
+
+    <resultMap type="FactorCategory" id="FactorCategoryResult">
+        <result property="factorCategoryId"    column="factor_category_id"    />
+        <result property="factorCategoryTitle"    column="factor_category_title"    />
+        <result property="sort"    column="sort"    />
+        <result property="isdelete"    column="isdelete"    />
+        <result property="isdouble"    column="isdouble"    />
+    </resultMap>
+
+    <resultMap type="Factor" id="FactorResult">
+        <result property="factorItemId"     column="factor_item_id"    />
+        <result property="factorItemTitle"  column="factor_item_title"    />
+        <result property="parentCategoryId" column="parent_category_id"    />
+    </resultMap>
+
+    <sql id="selectFactorCategoryVo">
+        select factor_category_id, factor_category_title, sort, isdelete, isdouble from factor_category
+    </sql>
+
+    <select id="selectFactorCategoryList" parameterType="FactorCategory" resultMap="FactorCategoryResult">
+        <include refid="selectFactorCategoryVo"/>
+        <where>
+            <if test="factorCategoryTitle != null  and factorCategoryTitle != ''"> and factor_category_title = #{factorCategoryTitle}</if>
+            <if test="sort != null "> and sort = #{sort}</if>
+            <if test="isdelete != null  and isdelete != ''"> and isdelete = #{isdelete}</if>
+            <if test="isdouble != null  and isdouble != ''"> and isdouble = #{isdouble}</if>
+        </where>
+    </select>
+
+    <select id="selectFactorCategoryByFactorCategoryId" parameterType="String" resultMap="FactorCategoryResult">
+        <include refid="selectFactorCategoryVo"/>
+        where factor_category_id = #{factorCategoryId}
+    </select>
+
+    <sql id="selectFactorVo">
+        select factor_item_id , factor_item_title , parent_category_id  from factor_item
+    </sql>
+    <select id="selectFactorList" parameterType="FactorCategory" resultMap="FactorResult" resultType="com.ruoyi.system.domain.Factor">
+        <include refid="selectFactorVo"/>
+        where parent_category_id = #{factorCategoryId}
+    </select>
+
+    <insert id="insertFactorCategory" parameterType="FactorCategory">
+        insert into factor_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="factorCategoryId != null">factor_category_id,</if>
+            <if test="factorCategoryTitle != null">factor_category_title,</if>
+            <if test="sort != null">sort,</if>
+            <if test="isdelete != null">isdelete,</if>
+            <if test="isdouble != null">isdouble,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="factorCategoryId != null">#{factorCategoryId},</if>
+            <if test="factorCategoryTitle != null">#{factorCategoryTitle},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="isdelete != null">#{isdelete},</if>
+            <if test="isdouble != null">#{isdouble},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFactorCategory" parameterType="FactorCategory">
+        update factor_category
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="factorCategoryTitle != null">factor_category_title = #{factorCategoryTitle},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="isdelete != null">isdelete = #{isdelete},</if>
+            <if test="isdouble != null">isdouble = #{isdouble},</if>
+        </trim>
+        where factor_category_id = #{factorCategoryId}
+    </update>
+
+    <delete id="deleteFactorCategoryByFactorCategoryId" parameterType="String">
+        delete from factor_category where factor_category_id = #{factorCategoryId}
+    </delete>
+
+    <delete id="deleteFactorCategoryByFactorCategoryIds" parameterType="String">
+        delete from factor_category where factor_category_id in
+        <foreach item="factorCategoryId" collection="array" open="(" separator="," close=")">
+            #{factorCategoryId}
+        </foreach>
+    </delete>
+</mapper>
