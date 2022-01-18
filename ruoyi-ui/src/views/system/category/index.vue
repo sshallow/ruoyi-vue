@@ -2,28 +2,32 @@
   <div style="padding: 10px;">
     <el-row :gutter="20">
       <!-- 因子菜单 -->
-      <el-col :span="10" :xs="24">
+      <el-col :span="10" :xs="24" class="left-board">
         <!-- 因子搜索框 -->
         <div class="head-container">
           <el-input
             v-model="factorItemTitle"
-            placeholder="请输入部门名称"
+            placeholder="请输入因子名称"
             clearable
             size="small"
             prefix-icon="el-icon-search"
-            style="margin-bottom: 20px"
+            style="margin-bottom: 10px"
           />
         </div>
         <!-- 因子选择 -->
         <el-row>
           <!-- 因子大类别 -->
           <el-col :span="4" class="components-factorCategory">
-            <div v-for="factorCategory in categoryList" :key="factorCategory.factorCategoryId" class="components-factorTitle" @click="getFactorList(factorCategory.factorCategoryId)">
+            <div v-for="factorCategory in categoryList"
+                 :key="factorCategory.factorCategoryId"
+                 class="components-factorTitle"
+                 @click="getFactorList(factorCategory.factorCategoryId)">
               {{ factorCategory.factorCategoryTitle }}
             </div>
           </el-col>
           <!-- 因子 -->
-          <el-col :span="20" style="height: 100vh; overflow: scroll">
+          <el-col :span="20"
+                  style="height: 100vh;  padding-left: 8px; overflow: scroll">
             <div v-for="factor in factorList" :key="factor.factorItemTitle"
                  @click="addConditionItem(factor)"
                  class="components-item">
@@ -45,19 +49,12 @@
               :disabled="formConf.disabled"
               :label-width="formConf.labelWidth + 'px'"
             >
-              <draggable class="drawing-board" :list="conditionItemList" :animation="340" group="componentsGroup">
-                <draggable-item
-                  v-for="(element, index) in conditionItemList"
-                  :key="element.renderKey"
-                  :drawing-list="conditionItemList"
-                  :element="element"
-                  :index="index"
-                  :active-id="activeId"
-                  :form-conf="formConf"
-                  @activeItem="activeFormItem"
-                  @copyItem="drawingItemCopy"
-                  @deleteItem="drawingItemDelete"
-                />
+              <draggable class="drawing-board" :list="conditionItemList"
+                         :animation="340" group="componentsGroup">
+                <condition-item v-for="factorCategory in conditionItemList"
+                                :key="factorCategory.factorItemTitle"
+                                :factor-item-title="factorCategory.factorItemTitle">
+                </condition-item>
               </draggable>
               <div v-show="!conditionItemList.length" class="empty-info">
                 从左侧拖入或点选组件进行表单设计
@@ -65,6 +62,10 @@
             </el-form>
           </el-row>
         </el-scrollbar>
+        <div style="align-content: center">
+          <el-button type="primary" @click="submitForm">提交1</el-button>
+          <el-button @click="resetForm">重置</el-button>
+        </div>
       </el-col>
     </el-row>
     <!-- 添加或修改因子类别对话框 -->
@@ -101,12 +102,12 @@ import {
   updateCategory
 } from '@/api/system/category'
 import draggable from 'vuedraggable'
-import DraggableItem from '@/views/tool/build/DraggableItem'
+import ConditionItem from './ConditionItem'
 
 export default {
   components: {
-    draggable,
-    DraggableItem
+    ConditionItem,
+    draggable
   },
   name: 'Category',
   data() {
@@ -164,7 +165,7 @@ export default {
         formBtns: true
       },
 
-      conditionItemList:[]
+      conditionItemList: []
     }
   },
   watch: {
@@ -189,6 +190,7 @@ export default {
         this.categoryList = response.rows
         this.total = response.total
         this.loading = false
+        // this.conditionItemList = response.rows;
       })
     },
 
@@ -202,11 +204,12 @@ export default {
       })
     },
 
-    // 添加条件
+    // 添加条件(选中因子)
     addConditionItem(item) {
-      const clone = this.cloneComponent(item)
-      this.drawingList.push(clone)
-      this.activeFormItem(clone)
+      this.conditionItemList.push(item)
+      // const clone = this.cloneComponent(item)
+      // this.drawingList.push(clone)
+      // this.activeFormItem(clone)
     },
 
     // 取消按钮
@@ -257,26 +260,6 @@ export default {
         this.title = '修改因子类别'
       })
     },
-    /** 提交按钮 */
-    submitForm() {
-      this.$refs['form'].validate(valid => {
-        if (valid) {
-          if (this.form.factorCategoryId != null) {
-            updateCategory(this.form).then(response => {
-              this.$modal.msgSuccess('修改成功')
-              this.open = false
-              this.getList()
-            })
-          } else {
-            addCategory(this.form).then(response => {
-              this.$modal.msgSuccess('新增成功')
-              this.open = false
-              this.getList()
-            })
-          }
-        }
-      })
-    },
     /** 删除按钮操作 */
     handleDelete(row) {
       const factorCategoryIds = row.factorCategoryId || this.ids
@@ -293,8 +276,19 @@ export default {
       this.download('system/category/export', {
         ...this.queryParams
       }, `category_${new Date().getTime()}.xlsx`)
-    }
+    },
 
+    /** 提交按钮 */
+    submitForm() {
+      this.$refs['elForm'].validate(valid => {
+        if (!valid) return
+        // TODO 提交表单
+      })
+    },
+    //重置
+    resetForm() {
+      this.$refs['elForm'].resetFields()
+    }
   }
 }
 </script>
@@ -304,19 +298,27 @@ export default {
 $selectedColor: #f6f7ff;
 $lighterBlue: #409EFF;
 
+.left-board {
+  width: 440px;
+  //position: absolute;
+  left: 0;
+  top: 10px;
+  height: 100vh;
+}
+
 .components-factorCategory {
   background: #F0F1FF;
   height: 1000px;
-  box-shadow: 2px 0 1px #E6E8FF;
-
+  box-shadow: 1.5px 0 1px #E6E8FF;
 }
 
-.components-factorTitle{
+.components-factorTitle {
   font-size: 12px;
-  font-weight:bold;
+  font-weight: bold;
   color: #222;
   text-align: center;
-  padding: 5px;
+  margin-top: 10px;
+
   &:hover {
     color: #787be8;
     background: #E6E8FF;
@@ -345,6 +347,88 @@ $lighterBlue: #409EFF;
     background: #E6E8FF;
     border-radius: 3px;
   }
+}
+
+.center-scrollbar {
+  height: calc(100vh - 42px);
+  overflow: hidden;
+  border-left: 1px solid #f1e8e8;
+  border-right: 1px solid #f1e8e8;
+  box-sizing: border-box;
+}
+
+.center-board-row {
+  padding: 12px 12px 15px 12px;
+  box-sizing: border-box;
+
+  & > .el-form {
+    // 69 = 12+15+42
+    height: calc(100vh - 69px);
+  }
+}
+
+.drawing-board {
+  height: 100%;
+  position: relative;
+
+  .components-body {
+    padding: 0;
+    margin: 0;
+    font-size: 0;
+  }
+
+  .sortable-ghost {
+    position: relative;
+    display: block;
+    overflow: hidden;
+
+    &::before {
+      content: " ";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 3px;
+      background: rgb(89, 89, 223);
+      z-index: 2;
+    }
+  }
+
+  .components-item.sortable-ghost {
+    width: 100%;
+    height: 60px;
+    background-color: $selectedColor;
+  }
+
+  .active-from-item {
+    & > .el-form-item {
+      background: $selectedColor;
+      border-radius: 6px;
+    }
+
+    & > .drawing-item-copy, & > .drawing-item-delete {
+      display: initial;
+    }
+
+    & > .component-name {
+      color: $lighterBlue;
+    }
+  }
+
+  .el-form-item {
+    margin-bottom: 15px;
+  }
+}
+
+.empty-info {
+  position: absolute;
+  top: 46%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 18px;
+  color: #ccb1ea;
+  letter-spacing: 4px;
 }
 
 </style>
